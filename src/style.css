@@ -1,0 +1,38 @@
+#game {
+  background-color: pink;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(255, 20, 147, 0.4);
+  border: 4px solid lightpink;
+  width: min(500px, 90vw, 65vh);
+  touch-action: none;
+}
+
+body {
+  font-family: "Fredoka Variable", sans-serif;
+  background-color: lavenderblush;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  margin: 0;
+  gap: 15px;
+}
+
+#main-header {
+  color: deeppink;
+  font-size: 48px;
+  font-weight: 700;
+  margin: 0;
+}
+
+#score-paragraph {
+  color: deeppink;
+  font-size: 22px;
+  font-weight: 500;
+  margin: 0;
+}
+
+#score-number {
+  font-weight: 700;
+}
