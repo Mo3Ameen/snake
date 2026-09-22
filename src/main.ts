@@ -1,5 +1,6 @@
 import "./style.css";
 import "@fontsource-variable/fredoka";
+import fredokaUrl from "@fontsource-variable/fredoka/files/fredoka-latin-wght-normal.woff2";
 
 let intervalId = 0;
 const cell = 20;
@@ -158,9 +159,10 @@ const startGame = () => {
     }
 }
 
-const promise = document.fonts.load("600 32px 'Fredoka Variable', sans-serif");
+const fredoka = new FontFace("Fredoka Variable", `url(${fredokaUrl})`, { weight: "300 700" });
 try {
-    await promise;
+    await fredoka.load();
+    document.fonts.add(fredoka);
 } catch (error) {
     console.warn(error);
 }
@@ -198,6 +200,7 @@ document.addEventListener("touchstart", (event) => {
 });
 
 document.addEventListener("touchend", (event) => {
+    event.preventDefault();
     const liftedFinger = event.changedTouches.item(0);
     if (liftedFinger === null) {
         return;
