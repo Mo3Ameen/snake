@@ -89,6 +89,7 @@ const togglePause = () => {
     } else {
         intervalId = setInterval(tick, tickMs);
         gamePaused = false;
+        drawBoard();
     }
 }
 
