@@ -3,6 +3,8 @@ import "@fontsource-variable/fredoka";
 
 let intervalId = 0;
 const cell = 20;
+let tickMs = 150;
+let freshStart = true;
 const game = document.getElementById("game");
 if (!(game instanceof HTMLCanvasElement)) {
     throw new Error("Element #game is not a canvas");
@@ -33,6 +35,7 @@ if (scoreElement === null) {
 }
 let score = 0;
 let gameOver = false;
+let gamePaused = false;
 
 function getRandomFoodPosition(): Position {
     let foodPosition: Position;
@@ -68,6 +71,40 @@ function changeDirection(direction: Direction) {
     }
 }
 
+const drawMessage = (title: string, subtitle: string) => {
+    context2D.font = "600 32px 'Fredoka Variable', sans-serif";
+    context2D.fillStyle = "deeppink";
+    context2D.textAlign = "center";
+    context2D.fillText(title, game.width / 2, game.height / 2);
+    context2D.font = "600 18px 'Fredoka Variable', sans-serif";
+    context2D.fillText(subtitle, game.width / 2, game.height / 2 + 35);
+}
+
+const togglePause = () => {
+    if (!gamePaused) {
+        clearInterval(intervalId);
+        gamePaused = true;
+        drawMessage("Game is paused!", "tap or press space to resume.");
+    } else {
+        intervalId = setInterval(tick, tickMs);
+        gamePaused = false;
+    }
+}
+
+const drawBoard = () => {
+    context2D.fillStyle = "pink";
+    context2D.fillRect(0, 0, game.width, game.height);
+    context2D.fillStyle = "red";
+    context2D.font = "30px sans-serif";
+    context2D.textAlign = "center";
+    context2D.textBaseline = "middle";
+    context2D.fillText("♥", ((food.x * cell) + (cell / 2)), ((food.y * cell) + (cell / 2)));
+    context2D.fillStyle = "hotpink";
+    for (const p of snake) {
+        context2D.fillRect(p.x * cell, p.y * cell, cell, cell);
+    }
+}
+
 const tick = () => {
 
     let xChange = 0;
@@ -86,12 +123,7 @@ const tick = () => {
     if (isCollision(newHead)) {
         gameOver = true;
         clearInterval(intervalId);
-        context2D.font = "600 32px 'Fredoka Variable', sans-serif";
-        context2D.fillStyle = "deeppink";
-        context2D.textAlign = "center";
-        context2D.fillText("Game Over!", game.width / 2, game.height / 2);
-        context2D.font = "600 18px 'Fredoka Variable', sans-serif";
-        context2D.fillText("tap or press space to restart.", game.width / 2, game.height / 2 + 35);
+        drawMessage("Game Over!", "tap or press space to restart.");
         return;
     }
     snake.unshift(newHead);
@@ -104,32 +136,36 @@ const tick = () => {
     }
     lastDirection = currentDirection;
 
-    context2D.fillStyle = "pink";
-    context2D.fillRect(0, 0, game.width, game.height);
-    context2D.fillStyle = "red";
-    context2D.font = "30px sans-serif";
-    context2D.textAlign = "center";
-    context2D.textBaseline = "middle";
-    context2D.fillText("♥", ((food.x * cell) + (cell / 2)), ((food.y * cell) + (cell / 2)));
-    context2D.fillStyle = "hotpink";
-    for (const p of snake) {
-        context2D.fillRect(p.x * cell, p.y * cell, cell, cell);
-    }
+    drawBoard();
 };
 
 const startGame = () => {
     snake = [{x: 13, y: 13}, {x: 12, y: 13}, {x: 11, y: 13}];
     food = getRandomFoodPosition();
+    drawBoard();
     currentDirection = "right";
     lastDirection = "right";
     score = 0;
     scoreElement.textContent = `${score}`;
     gameOver = false;
+    gamePaused = true;
     clearInterval(intervalId);
-    intervalId = setInterval(tick, 150);
+    if (!freshStart) {
+        gamePaused = false;
+        intervalId = setInterval(tick, tickMs);
+    } else {
+        drawMessage("Welcome to the Snake!", "tap or press space to start/pause/restart.");
+    }
 }
 
+const promise = document.fonts.load("600 32px 'Fredoka Variable', sans-serif");
+try {
+    await promise;
+} catch (error) {
+    console.warn(error);
+}
 startGame();
+freshStart = false;
 
 document.addEventListener("keydown", (event) => {
     if (event.key === "ArrowUp" || event.key === "w") {
@@ -141,13 +177,18 @@ document.addEventListener("keydown", (event) => {
     } else if (event.key === "ArrowRight"  || event.key === "d") {
         changeDirection("right");
     } else if (event.key === " ") {
+        if (event.repeat) {
+            return;
+        }
         if (gameOver) {
             startGame();
+        } else {
+            togglePause();
         }
     }
 });
 
-game.addEventListener("touchstart", (event) => {
+document.addEventListener("touchstart", (event) => {
     const firstFinger = event.touches.item(0);
     if (firstFinger === null) {
         return;
@@ -156,7 +197,7 @@ game.addEventListener("touchstart", (event) => {
     touchStartY = firstFinger.clientY;
 });
 
-game.addEventListener("touchend", (event) => {
+document.addEventListener("touchend", (event) => {
     const liftedFinger = event.changedTouches.item(0);
     if (liftedFinger === null) {
         return;
@@ -167,6 +208,8 @@ game.addEventListener("touchend", (event) => {
     if (Math.abs(xDifference) < 30 && Math.abs(yDifference) < 30) {
         if (gameOver) {
             startGame();
+        } else {
+            togglePause();
         }
         return;
     }
