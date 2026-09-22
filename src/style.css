@@ -19,6 +19,9 @@ body {
   gap: 15px;
   touch-action: none;
   overscroll-behavior: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 #main-header {
